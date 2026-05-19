@@ -1,0 +1,812 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Meissner Effect | Quantum Levitation • Superconductivity Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        @import url('https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+        body {
+            background: #eef2fa;
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 24px;
+        }
+
+        .game-card {
+            max-width: 1120px;
+            width: 100%;
+            background: #ffffff;
+            border-radius: 2rem;
+            box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            transition: all 0.2s;
+        }
+
+        /* theory & meissner explanation */
+        .theory-section {
+            background: #e8f0fe;
+            padding: 20px 28px;
+            border-bottom: 1px solid #cde1f5;
+        }
+
+        .theory-section h2 {
+            font-size: 1.45rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #0f2b3d, #1a5a7a);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .theory-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 18px;
+            margin-top: 6px;
+        }
+
+        .theory-card {
+            flex: 1;
+            background: #ffffffdd;
+            backdrop-filter: blur(2px);
+            padding: 12px 18px;
+            border-radius: 24px;
+            border: 1px solid #c1dcf5;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.02);
+        }
+
+        .theory-card h3 {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #1a5575;
+            margin-bottom: 8px;
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .theory-card p {
+            font-size: 0.8rem;
+            line-height: 1.45;
+            color: #1e3a5f;
+        }
+
+        .highlight-badge {
+            background: #d4e7fc;
+            border-radius: 24px;
+            padding: 2px 10px;
+            font-family: monospace;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: #005e8c;
+        }
+
+        /* canvas area */
+        .canvas-area {
+            padding: 20px 24px 12px 24px;
+            background: #ffffff;
+            position: relative;
+        }
+
+        #hud {
+            display: flex;
+            justify-content: space-between;
+            background: #f5f9ff;
+            border-radius: 60px;
+            padding: 8px 20px;
+            margin-bottom: 18px;
+            border: 1px solid #cde0f0;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .stat {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 500;
+            font-size: 0.8rem;
+            background: #eef3fc;
+            padding: 4px 14px;
+            border-radius: 32px;
+            color: #1d5d8a;
+            border: 1px solid #c9ddf5;
+        }
+
+        .stat span {
+            font-weight: 800;
+            color: #0466a8;
+            font-size: 1rem;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: auto;
+            border-radius: 28px;
+            background: #dfebf5;
+            box-shadow: 0 6px 14px rgba(0, 0, 0, 0.05);
+            border: 1px solid #c9ddf0;
+            cursor: pointer;
+        }
+
+        /* footer with slider + levitation indicator */
+        .temp-footer {
+            background: #f1f6fd;
+            padding: 16px 28px 24px 28px;
+            border-top: 1px solid #d9e6f5;
+        }
+
+        .levitation-control {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 20px;
+            justify-content: space-between;
+        }
+
+        .temp-range-wrap {
+            flex: 2;
+            min-width: 200px;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            -webkit-appearance: none;
+            background: linear-gradient(90deg, #ff8a5c, #ffbc6e, #8dd0ff, #3a86ff);
+            border-radius: 12px;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #0f6b92;
+            border-radius: 50%;
+            border: 2px solid white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            cursor: pointer;
+        }
+
+        .temp-value-pill {
+            background: white;
+            padding: 6px 16px;
+            border-radius: 40px;
+            font-weight: 700;
+            font-family: monospace;
+            border: 1px solid #b2d0ec;
+            color: #075f89;
+        }
+
+        .height-indicator {
+            background: #e5f0ff;
+            border-radius: 40px;
+            padding: 4px 14px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            font-family: monospace;
+        }
+
+        #state-message {
+            margin-top: 14px;
+            background: #eef3fc;
+            border-radius: 32px;
+            padding: 6px 16px;
+            font-size: 0.7rem;
+            font-weight: 500;
+            text-align: center;
+            color: #236b94;
+        }
+
+        /* overlays (light theme) */
+        #start-screen, #game-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(245, 249, 252, 0.97);
+            backdrop-filter: blur(8px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 18px;
+            z-index: 30;
+            border-radius: 28px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .glass-card-light {
+            background: white;
+            border-radius: 36px;
+            padding: 28px 32px;
+            max-width: 440px;
+            text-align: center;
+            box-shadow: 0 20px 30px -12px rgba(0, 0, 0, 0.08);
+            border: 1px solid #cde0f2;
+        }
+
+        button {
+            background: #1d6f96;
+            border: none;
+            color: white;
+            font-weight: 600;
+            padding: 10px 28px;
+            border-radius: 40px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        button:hover {
+            background: #0b5477;
+            transform: scale(1.01);
+        }
+
+        .fact-card-light {
+            background: #eef4fa;
+            border-radius: 24px;
+            padding: 12px 16px;
+            font-size: 0.75rem;
+            border-left: 4px solid #2c7da0;
+        }
+
+        #physics-popup {
+            position: absolute;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #ffffffee;
+            border: 1px solid #4797b5;
+            border-radius: 48px;
+            padding: 6px 18px;
+            font-family: monospace;
+            font-size: 0.7rem;
+            font-weight: 500;
+            color: #015c82;
+            backdrop-filter: blur(6px);
+            opacity: 0;
+            transition: opacity 0.25s;
+            pointer-events: none;
+            z-index: 45;
+            white-space: nowrap;
+        }
+
+        #physics-popup.show {
+            opacity: 1;
+        }
+
+        .relative {
+            position: relative;
+        }
+    </style>
+</head>
+<body>
+<div class="game-card">
+    <!-- Meissner theory + direct explanation of levitation -->
+    <div class="theory-section">
+        <h2><span>🧲⬇️</span> Meissner Effect · Quantum Levitation & Temperature = Height</h2>
+        <div class="theory-grid">
+            <div class="theory-card">
+                <h3>✨ Core physics in game</h3>
+                <p><strong>Temperature directly controls LEVITATION HEIGHT</strong> — the colder you go below <span class="highlight-badge">Tc = 4.15 K</span>, the higher the runner floats. This mimics the <strong>Meissner effect</strong>: a superconductor expels magnetic fields and levitates. <strong>No "jump button" — only the cryostat (slider) defines your altitude.</strong></p>
+            </div>
+            <div class="theory-card">
+                <h3>🎯 Coins & obstacles aligned with height</h3>
+                <p>🪙 <strong>Golden coins appear at different levitation layers</strong> — they are spawned at altitudes that match your current temperature height. The colder you are, the higher you can reach coins. 🔴 Red vortices stay on the ground. <strong>To collect coins, adjust temperature to float exactly at coin level.</strong></p>
+            </div>
+            <div class="theory-card">
+                <h3>🧊 Learn by doing</h3>
+                <p>Slide temperature → watch runner rise/fall. <strong>Superconducting state = levitation = safety & coin collection</strong>. Real maglev trains & quantum levitation use this principle. Avoid vortices by staying cold!</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="canvas-area relative">
+        <div id="hud">
+            <div class="stat">🌡️ TEMP <span id="temp-value">150.0</span> K</div>
+            <div class="stat">⚡ Tc = 4.15 K</div>
+            <div class="stat">💰 SCORE <span id="score-value">0</span></div>
+            <div class="stat">🪙 COINS <span id="coins-value">0</span></div>
+            <div class="stat">📈 LEVITATION <span id="height-percent">0</span>%</div>
+        </div>
+        <canvas id="gameCanvas" width="900" height="460"></canvas>
+        <div id="physics-popup"><strong id="popup-title"></strong> <span id="popup-body"></span></div>
+
+        <div id="start-screen">
+            <div class="glass-card-light">
+                <h2 style="color:#075a81;">❄️ MEISSNER LEVITATION LAB</h2>
+                <div class="fact-card-light">
+                    <strong>🔬 Superconductivity = levitation by temperature</strong><br>
+                    Runner height changes in real time with slider. <strong>Cool below 4.15 K → you rise!</strong><br>
+                    Coins are placed at heights that correspond to different temperature zones. Adapt your cooling to collect them.
+                </div>
+                <div class="fact-card-light" style="margin-top: 12px;">
+                    🎮 <strong>How to master the game</strong><br>
+                    ➤ <strong>Slide temperature down/up → change levitation height</strong><br>
+                    ➤ Coins appear at various Y levels → <strong>match coin altitude by adjusting temp</strong><br>
+                    ➤ Avoid red vortices on the ground (stay cold = high levitation)<br>
+                    ➤ No jump button: physics of Meissner effect is your only control.
+                </div>
+                <button id="start-btn">🧊 START EXPERIMENT</button>
+            </div>
+        </div>
+
+        <div id="game-overlay" class="hidden">
+            <div class="glass-card-light">
+                <h2 style="color:#b54a3a;">⚡ SUPERCONDUCTIVITY LOST</h2>
+                <p id="overlay-message" style="margin: 12px 0;"></p>
+                <div class="fact-card-light" id="overlay-fact"></div>
+                <button id="restart-btn">🔄 RESTART & COOL AGAIN</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER: Temperature slider = main levitation control -->
+    <div class="temp-footer">
+        <div class="levitation-control">
+            <div class="temp-range-wrap">
+                <input type="range" id="tempSlider" min="1.2" max="300" step="0.3" value="150">
+            </div>
+            <div class="temp-value-pill">
+                <span id="footer-temp">150.0</span> K
+            </div>
+            <div class="height-indicator">
+                🧲 LEVITATION Y: <span id="current-height-y">---</span> px
+            </div>
+        </div>
+        <div id="state-message">
+            ⚡ NORMAL STATE (above Tc) — no levitation. COOL DOWN below 4.15K to rise and collect coins!
+        </div>
+    </div>
+</div>
+
+<script>
+    (function(){
+        // ------ constants -----
+        const Tc = 4.15;
+        const MAX_TEMP = 300;
+        const MIN_TEMP = 1.2;
+        const W = 900, H = 460;
+        const GROUND_Y = 400;
+        const MIN_RUNNER_Y = 150;       // highest levitation at lowest temp
+        const MAX_RUNNER_Y = GROUND_Y - 46;  // ground position (hot)
+       
+        let gameState = 'start'; // 'start', 'running', 'gameover'
+        let score = 0;
+        let coinsCollected = 0;
+        let frame = 0;
+        let lastObstacleFrame = -50;
+       
+        let currentTemp = 150.0;    // Kelvin, slider only
+       
+        // Runner will follow targetY based on temp (no manual jump)
+        let runner = {
+            x: 130,
+            w: 34,
+            h: 46,
+            y: MAX_RUNNER_Y,
+            targetY: MAX_RUNNER_Y
+        };
+       
+        // coins & vortices
+        let coins = [];
+        let vortices = [];
+        let particles = [];
+       
+        let pathOffset = 0;
+       
+        // ----- helper functions: temperature → height (linear mapping) -----
+        function getRunnerYfromTemp(temp) {
+            if (temp >= Tc) {
+                return MAX_RUNNER_Y;   // on ground
+            } else {
+                // temp range: Tc down to MIN_TEMP -> levitate from ground to MIN_RUNNER_Y
+                const range = Tc - MIN_TEMP;
+                let coldFactor = (Tc - temp) / range;
+                coldFactor = Math.min(1, Math.max(0, coldFactor));
+                const maxLift = MAX_RUNNER_Y - MIN_RUNNER_Y;
+                return MAX_RUNNER_Y - (coldFactor * maxLift);
+            }
+        }
+       
+        // speed (smooth and slower for better height precision)
+        function computeSpeed() {
+            if (currentTemp < Tc) {
+                let coldFactor = (Tc - currentTemp) / Tc;
+                return 2.0 + coldFactor * 1.4;   // max 3.4 when extremely cold
+            } else {
+                let hotFactor = (currentTemp - Tc) / (MAX_TEMP - Tc);
+                return 3.8 + hotFactor * 3.2;    // slower max ~7
+            }
+        }
+        let currentSpeed = computeSpeed();
+       
+        // update all UI & runner target
+        function refreshTempUI() {
+            document.getElementById('temp-value').innerText = currentTemp.toFixed(1);
+            document.getElementById('footer-temp').innerText = currentTemp.toFixed(1);
+            runner.targetY = getRunnerYfromTemp(currentTemp);
+            currentSpeed = computeSpeed();
+            document.getElementById('speedDisplay')?.remove();
+            // show levitation percentage
+            let maxLiftTotal = MAX_RUNNER_Y - MIN_RUNNER_Y;
+            let currentLift = MAX_RUNNER_Y - runner.targetY;
+            let percent = (currentLift / maxLiftTotal) * 100;
+            percent = Math.min(100, Math.max(0, percent));
+            document.getElementById('height-percent').innerText = Math.floor(percent);
+            document.getElementById('current-height-y').innerText = Math.floor(runner.targetY);
+           
+            const stateDiv = document.getElementById('state-message');
+            if (currentTemp < Tc) {
+                stateDiv.innerHTML = `✨ SUPERCONDUCTING STATE | Meissner active — levitation height = ${Math.floor(percent)}% ✨<br> Adjust slider to float at coin altitude.`;
+                stateDiv.style.background = "#dff0ff";
+                stateDiv.style.color = "#035c7c";
+            } else {
+                stateDiv.innerHTML = `⚠️ NORMAL STATE — above ${Tc} K → no levitation. COOL DOWN (move slider left) to rise and collect floating coins! ⚠️`;
+                stateDiv.style.background = "#ffe9e9";
+                stateDiv.style.color = "#a13131";
+            }
+        }
+       
+        function onTemperatureChange(newVal) {
+            let wasSuper = currentTemp < Tc;
+            currentTemp = Math.min(MAX_TEMP, Math.max(MIN_TEMP, newVal));
+            refreshTempUI();
+            let isSuper = currentTemp < Tc;
+            if (wasSuper !== isSuper && gameState === 'running') {
+                if (isSuper) {
+                    showPopup("⚡ MEISSNER EFFECT", "Levitation activated! Height = temperature dependent. Move slider to float & collect coins.");
+                    spawnEffect(runner.x+runner.w/2, runner.y+runner.h/2, '#7ac4ff', 20);
+                } else {
+                    showPopup("⚠️ Superconductivity lost", "You warmed up above Tc — you fell to ground. Avoid vortices!");
+                    spawnEffect(runner.x+runner.w/2, runner.y+runner.h/2, '#ffac7a', 15);
+                }
+            }
+        }
+       
+        // ---------- COIN spawning: coins appear at altitudes that match possible levitation heights ----------
+        // We'll spawn coins at different Y layers correlating with temperature zones: low levitation (warm super), mid, high.
+        function spawnCoinAtAltitude() {
+            // random alt based on possible levitation heights: from 180px up to 290px (upper part)
+            // but also can include lower coins for 'partial levitation'
+            let possibleY = [190, 220, 250, 280, 310];
+            let selectedY = possibleY[Math.floor(Math.random() * possibleY.length)];
+            // coin value based on difficulty: higher coins = more risky but better
+            let value = 10;
+            if (selectedY <= 210) value = 12;
+            if (selectedY >= 270) value = 15;
+            coins.push({
+                x: W + 22,
+                y: selectedY,
+                r: 10,
+                rot: 0,
+                value: value,
+                targetAlt: selectedY
+            });
+        }
+       
+        function spawnEntities() {
+            if (gameState !== 'running') return;
+            let gap = Math.max(42, Math.floor(55 - currentSpeed * 1.1));
+            if (frame % gap === 0 || (frame % 38 === 0 && frame > 45)) {
+                // 70% coins (altitude-diverse) 30% vortex
+                if (Math.random() < 0.72) {
+                    spawnCoinAtAltitude();
+                } else {
+                    vortices.push({
+                        x: W + 28,
+                        y: GROUND_Y - 42,
+                        w: 32,
+                        h: 44,
+                        pulse: 0
+                    });
+                    lastObstacleFrame = frame;
+                }
+            }
+            // additional coin spawn frequency when cold
+            if (currentTemp < Tc && frame % 34 === 0 && Math.random() < 0.55) {
+                spawnCoinAtAltitude();
+            }
+        }
+       
+        // update runner position (smooth follow temperature target)
+        function updateGame() {
+            if (gameState !== 'running') return;
+            // runner Y lerp (immediate but smooth visual)
+            runner.y = runner.y * 0.82 + runner.targetY * 0.18;
+           
+            // move coins and rotate
+            for (let c of coins) {
+                c.x -= currentSpeed;
+                c.rot += 0.09;
+            }
+            coins = coins.filter(c => c.x > -40);
+           
+            for (let v of vortices) {
+                v.x -= currentSpeed;
+                v.pulse += 0.05;
+            }
+            vortices = vortices.filter(v => v.x > -50);
+           
+            // particles
+            for (let i=0;i<particles.length;i++) {
+                particles[i].x += particles[i].vx;
+                particles[i].y += particles[i].vy;
+                particles[i].vy += 0.1;
+                particles[i].life -= 0.035;
+            }
+            particles = particles.filter(p => p.life > 0);
+           
+            // --- COIN COLLECTION: you can collect if runner altitude is close to coin altitude (height matters)
+            for (let i=0;i<coins.length;i++) {
+                let c = coins[i];
+                let dx = (runner.x + runner.w/2) - c.x;
+                let dy = (runner.y + runner.h/2) - c.y;
+                // coin collection radius a bit forgiving but altitude must be in reach (~35px)
+                if (Math.hypot(dx, dy) < c.r + 18) {
+                    coinsCollected++;
+                    score += c.value;
+                    spawnEffect(c.x, c.y, '#FFD966', 10);
+                    showPopup("🪙 COIN +" + c.value, "Meissner levitation let you reach this quantum energy level!");
+                    coins.splice(i,1);
+                    i--;
+                    if (coinsCollected % 6 === 0) {
+                        showPopup("✨ Cooper pair flux", "Collecting coins = gathering superconducting electrons pairs.");
+                    }
+                }
+            }
+           
+            // VORTEX danger: only harmful if runner is low (not enough levitation)
+            for (let v of vortices) {
+                if (runner.x < v.x + v.w - 8 && runner.x + runner.w > v.x + 6 &&
+                    runner.y < v.y + v.h - 6 && runner.y + runner.h > v.y + 6) {
+                    const isNearGround = (runner.y + runner.h) > (GROUND_Y - 55);
+                    if (!(currentTemp < Tc) || isNearGround) {
+                        gameState = 'gameover';
+                        let msg = `Temperature = ${currentTemp.toFixed(1)} K. Without sufficient Meissner levitation, magnetic vortex hit the superconductor.`;
+                        document.getElementById('overlay-message').innerHTML = msg;
+                        document.getElementById('overlay-fact').innerHTML = '💡 Real physics: Type-II vortices destroy zero resistance. Stay COLD and rise above them to survive.';
+                        document.getElementById('game-overlay').classList.remove('hidden');
+                        return;
+                    } else {
+                        // safely repelled
+                        spawnEffect(v.x+v.w/2, v.y+v.h/2, '#ffae70', 12);
+                        vortices = vortices.filter(vx => vx !== v);
+                        score += 30;
+                        showPopup("🌀 Vortex repelled!", "Meissner effect expelled magnetic flux because you were cold enough!");
+                        break;
+                    }
+                }
+            }
+           
+            score += 0.2;
+            frame++;
+            pathOffset += 0.018;
+        }
+       
+        function spawnEffect(x, y, color, count) {
+            for (let i=0;i<count;i++) {
+                let angle = Math.random() * Math.PI * 2;
+                let spd = 0.7 + Math.random() * 2.2;
+                particles.push({
+                    x, y,
+                    vx: Math.cos(angle)*spd,
+                    vy: Math.sin(angle)*spd - 1,
+                    life: 0.9,
+                    color: color
+                });
+            }
+        }
+       
+        let popupTimer = null;
+        function showPopup(title, body) {
+            const el = document.getElementById('physics-popup');
+            document.getElementById('popup-title').innerHTML = title + ' • ';
+            document.getElementById('popup-body').innerHTML = body;
+            el.classList.add('show');
+            if(popupTimer) clearTimeout(popupTimer);
+            popupTimer = setTimeout(() => el.classList.remove('show'), 2800);
+        }
+       
+        // ----- DRAW (light theme, 3D wavy track, visual alt indicators) -----
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        let animTick = 0;
+       
+        function draw3DWavy() {
+            ctx.save();
+            ctx.shadowBlur = 0;
+            for (let i=-2;i<=2;i++) {
+                let off = (i*26) + Math.sin(pathOffset*1.3 + i)*4;
+                ctx.beginPath();
+                ctx.moveTo(W/2 + off, GROUND_Y - 12);
+                ctx.lineTo(W/2 + off*0.45, H);
+                ctx.strokeStyle = i===0 ? '#98b7da' : '#bed4ed';
+                ctx.lineWidth = i===0 ? 2.2 : 1.2;
+                ctx.stroke();
+            }
+            ctx.beginPath();
+            for(let x=0;x<=W;x+=28){
+                let y = GROUND_Y - 3 + Math.sin(x*0.012 + pathOffset)*6 + Math.sin(x*0.025)*2.5;
+                if(x===0) ctx.moveTo(x,y);
+                else ctx.lineTo(x,y);
+            }
+            ctx.strokeStyle = '#7f9fbf';
+            ctx.lineWidth = 2.2;
+            ctx.stroke();
+            ctx.restore();
+        }
+       
+        function draw() {
+            animTick++;
+            const isSuper = currentTemp < Tc;
+            // sky gradient
+            let grad = ctx.createLinearGradient(0,0,0,GROUND_Y);
+            grad.addColorStop(0, '#e2edfc');
+            grad.addColorStop(1, '#cde0f2');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0,0,W,H);
+           
+            // background floating quantum dots
+            ctx.globalAlpha = 0.35;
+            for(let i=0;i<22;i++) {
+                ctx.fillStyle = '#6b9fc7';
+                ctx.beginPath();
+                ctx.arc((i*57 + animTick*1.5) % W, 70 + Math.sin(i+animTick*0.025)*28, 2.2, 0, Math.PI*2);
+                ctx.fill();
+            }
+            ctx.globalAlpha = 1;
+            // ground fill
+            ctx.fillStyle = '#bdd4e8';
+            ctx.fillRect(0, GROUND_Y-6, W, H-GROUND_Y+12);
+            draw3DWavy();
+            // ground marks
+            ctx.fillStyle = '#a1bad2';
+            for(let i=0;i<18;i++) {
+                let x = (i*52 + animTick * currentSpeed * 0.5) % (W+70) - 40;
+                ctx.fillRect(x, GROUND_Y-2, 24, 4);
+            }
+           
+            // draw vortices
+            for(let v of vortices) {
+                ctx.shadowBlur = 5;
+                ctx.shadowColor = '#b34b4b';
+                let gradV = ctx.createLinearGradient(v.x, v.y, v.x+v.w, v.y+v.h);
+                gradV.addColorStop(0,'#cb5a6e');
+                gradV.addColorStop(1,'#e27e7e');
+                ctx.fillStyle = gradV;
+                ctx.beginPath();
+                ctx.ellipse(v.x+v.w/2, v.y+v.h/2-4, v.w/2, v.h/2.4, 0, 0, Math.PI*2);
+                ctx.fill();
+                ctx.fillStyle = '#fff2df';
+                ctx.font = "18px monospace";
+                ctx.fillText("⨀", v.x+v.w/2-6, v.y+v.h/2);
+                ctx.shadowBlur=0;
+            }
+           
+            // coins (golden) with shine
+            for(let c of coins) {
+                ctx.save();
+                ctx.shadowBlur = 5;
+                ctx.shadowColor = '#c9a03d';
+                ctx.translate(c.x, c.y);
+                ctx.rotate(c.rot);
+                ctx.fillStyle = '#f7c45a';
+                ctx.beginPath();
+                ctx.ellipse(0,0, c.r, c.r*1.1, 0, 0, Math.PI*2);
+                ctx.fill();
+                ctx.fillStyle = '#ffde9c';
+                ctx.beginPath();
+                ctx.ellipse(0,0, c.r*0.7, c.r*0.75, 0, 0, Math.PI*2);
+                ctx.fill();
+                ctx.fillStyle = '#c9902a';
+                ctx.font = "bold 11px monospace";
+                ctx.fillText("🪙", -5, 4);
+                ctx.restore();
+            }
+           
+            // runner (levitating character)
+            ctx.save();
+            if(isSuper) {
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = '#76c2ff';
+                ctx.globalAlpha = 0.4;
+                ctx.beginPath();
+                ctx.ellipse(runner.x+runner.w/2, runner.y+runner.h/2, runner.w/2+8, runner.h/2+7, 0, 0, Math.PI*2);
+                ctx.fillStyle = '#92d0ff';
+                ctx.fill();
+                ctx.globalAlpha = 1;
+            }
+            ctx.fillStyle = '#4d89b0';
+            ctx.beginPath();
+            ctx.roundRect(runner.x, runner.y, runner.w, runner.h, 10);
+            ctx.fill();
+            ctx.fillStyle = '#f5e5b3';
+            ctx.fillRect(runner.x+6, runner.y+11, 7, 7);
+            ctx.fillRect(runner.x+21, runner.y+11, 7, 7);
+            ctx.fillStyle = '#1e4b6e';
+            ctx.fillRect(runner.x+7, runner.y+12, 5, 5);
+            ctx.fillRect(runner.x+22, runner.y+12, 5, 5);
+            ctx.restore();
+           
+            // trail if levitating
+            if(isSuper && (animTick % 3 === 0)) {
+                ctx.fillStyle = '#b3dcff';
+                ctx.beginPath();
+                ctx.arc(runner.x+runner.w/2, runner.y+runner.h-6, 4, 0, Math.PI*2);
+                ctx.fill();
+            }
+           
+            // in-game instruction
+            ctx.font = "500 10px 'JetBrains Mono'";
+            ctx.fillStyle = '#1b577b';
+            ctx.fillText("❄️ TEMPERATURE = LEVITATION HEIGHT → adjust slider to float & collect coins", 20, 42);
+            document.getElementById('score-value').innerText = Math.floor(score);
+            document.getElementById('coins-value').innerText = coinsCollected;
+        }
+       
+        function gameLoop() {
+            if (gameState === 'running') {
+                spawnEntities();
+                updateGame();
+                currentSpeed = computeSpeed();
+            }
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+       
+        function restart() {
+            gameState = 'running';
+            score = 0;
+            coinsCollected = 0;
+            frame = 0;
+            lastObstacleFrame = -50;
+            coins = [];
+            vortices = [];
+            particles = [];
+            runner.y = MAX_RUNNER_Y;
+            runner.targetY = MAX_RUNNER_Y;
+            currentTemp = 150.0;
+            document.getElementById('tempSlider').value = "150";
+            onTemperatureChange(150);
+            document.getElementById('game-overlay').classList.add('hidden');
+            refreshTempUI();
+        }
+       
+        // EVENT LISTENERS
+        const slider = document.getElementById('tempSlider');
+        slider.addEventListener('input', (e) => {
+            if (gameState === 'running') onTemperatureChange(parseFloat(e.target.value));
+            else if (gameState === 'start') onTemperatureChange(parseFloat(e.target.value));
+        });
+        document.getElementById('start-btn').addEventListener('click', () => {
+            document.getElementById('start-screen').classList.add('hidden');
+            restart();
+            setTimeout(() => showPopup("⚡ Meissner Lab", "Temperature directly controls height. Cool below 4.15K → rise to collect coins!"), 500);
+        });
+        document.getElementById('restart-btn').addEventListener('click', () => { restart(); });
+       
+        refreshTempUI();
+        gameLoop();
+    })();
+</script>
+</body>
+</html>
