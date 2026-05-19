@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Superconductivity Physics Portal</title>
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    
+    <style>
+        /* CSS Variables for Quantum Theme */
+        :root {
+            --bg-color: #050510;
+            --text-main: #ffffff;
+            --text-muted: #a0a5b5;
+            --cyan-glow: #00f3ff;
+            --purple-glow: #8a2be2;
+            --card-bg: rgba(20, 20, 40, 0.4);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Base Reset & Typography */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        /* Particle Background Container */
+        #particles-js {
+            position: fixed;
+            width: 100vw;
+            height: 100vh;
+            top: 0;
+            left: 0;
+            z-index: -1;
+            background: radial-gradient(circle at center, #130b29 0%, var(--bg-color) 100%);
+        }
+
+        /* Main Content Wrapper */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Header Animations */
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .hero {
+            text-align: center;
+            padding: 4rem 1rem;
+            animation: slideDown 1s ease-out forwards;
+        }
+
+        .hero h1 {
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            font-weight: 800;
+            margin-bottom: 1rem;
+            background: linear-gradient(to right, var(--cyan-glow), var(--purple-glow));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 30px rgba(0, 243, 255, 0.3);
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            color: var(--text-muted);
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        /* Game Cards Layout */
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 4rem;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(40px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .game-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 2.5rem;
+            text-align: center;
+            transition: all 0.4s ease;
+            opacity: 0;
+            animation: slideUp 0.8s ease-out forwards;
+        }
+
+        /* Staggered animation delays */
+        .game-card:nth-child(1) { animation-delay: 0.3s; }
+        .game-card:nth-child(2) { animation-delay: 0.5s; }
+
+        .game-card:hover {
+            transform: translateY(-10px) scale(1.03);
+            border-color: var(--cyan-glow);
+            box-shadow: 0 10px 30px rgba(0, 243, 255, 0.2);
+        }
+
+        .emoji-container {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            display: inline-block;
+            transition: transform 0.3s ease;
+        }
+
+        /* Emoji Hover Animations */
+        @keyframes floatBounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+        
+        @keyframes gentleSpin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .game-card:nth-child(1):hover .emoji-container {
+            animation: floatBounce 1s ease-in-out infinite;
+        }
+        
+        .game-card:nth-child(2):hover .emoji-container {
+            animation: gentleSpin 4s linear infinite;
+        }
+
+        .game-card h2 {
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+            color: #fff;
+        }
+
+        .game-card p {
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+        }
+
+        /* Glowing Buttons */
+        .play-btn {
+            display: inline-block;
+            padding: 12px 30px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 50px;
+            background: linear-gradient(45deg, var(--purple-glow), var(--cyan-glow), var(--purple-glow));
+            background-size: 200% auto;
+            border: none;
+            cursor: pointer;
+            transition: 0.5s;
+        }
+
+        .play-btn:hover {
+            background-position: right center;
+            box-shadow: 0 0 20px var(--cyan-glow);
+            color: #fff;
+        }
+
+        /* Science Section (Filling the space) */
+        .science-section {
+            background: rgba(10, 10, 25, 0.6);
+            border-radius: 20px;
+            padding: 3rem;
+            border: 1px solid var(--glass-border);
+            opacity: 0;
+            animation: slideUp 0.8s ease-out 0.7s forwards;
+            margin-bottom: 2rem;
+        }
+
+        .science-section h2 {
+            text-align: center;
+            margin-bottom: 2rem;
+            font-size: 2rem;
+            color: var(--cyan-glow);
+        }
+
+        .science-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+        }
+
+        .science-box h3 {
+            color: #fff;
+            margin-bottom: 0.5rem;
+            font-size: 1.3rem;
+        }
+
+        .science-box p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero { padding: 3rem 1rem 2rem; }
+            .science-section { padding: 2rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Particle Background -->
+    <div id="particles-js"></div>
+
+    <div class="container">
+        <!-- Header Section -->
+        <header class="hero">
+            <h1>Welcome to the Zero-Resistance Universe!</h1>
+            <p>Dive into the Superconductivity Physics Portal. Master quantum mechanics, conquer magnetic fields, and explore the frictionless world through interactive gaming.</p>
+        </header>
+
+        <!-- Games Section -->
+        <section class="games-grid">
+            <!-- Game 1 -->
+            <div class="game-card">
+                <div class="emoji-container">🏃⚡</div>
+                <h2>Superconducting Runner</h2>
+                <p>A fast-paced racing game where you navigate a landscape of critical temperatures and magnetic fields. Keep your resistance at absolute zero to maintain maximum speed!</p>
+                <a href="runner.html" class="play-btn">Launch Game</a>
+            </div>
+
+            <!-- Game 2 -->
+            <div class="game-card">
+                <div class="emoji-container">🎲🧲</div>
+                <h2>Superconducting Ludo</h2>
+                <p>A reimagined classic. Navigate your tokens across a quantum grid utilizing advanced physics concepts like quantum tunneling and the Meissner effect to outsmart opponents.</p>
+                <a href="https://superconductingludo.lovable.app" target="_blank" class="play-btn">Launch Game</a>
+            </div>
+        </section>
+
+        <!-- Educational Section -->
+        <section class="science-section">
+            <h2>The Science Behind the Games</h2>
+            <div class="science-grid">
+                <div class="science-box">
+                    <h3>The Meissner Effect</h3>
+                    <p>When a material transitions into a superconducting state, it actively ejects magnetic fields from its interior. This phenomenon is what allows magnets to literally levitate above superconductors!</p>
+                </div>
+                <div class="science-box">
+                    <h3>Zero Electrical Resistance</h3>
+                    <p>At critical low temperatures, electrons pair up (Cooper pairs) and move through the material without any collisions or friction. An electric current in a superconductor can flow infinitely without losing energy.</p>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- FIXED Particles.js Library Link -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/particles.js/2.0.0/particles.min.js"></script>
+    
+    <!-- Initialize Animations -->
+    <script>
+        particlesJS("particles-js", {
+            "particles": {
+                "number": {
+                    "value": 60,
+                    "density": {
+                        "enable": true,
+                        "value_area": 800
+                    }
+                },
+                "color": {
+                    "value": ["#00f3ff", "#8a2be2", "#ffffff"]
+                },
+                "shape": {
+                    "type": "circle",
+                },
+                "opacity": {
+                    "value": 0.5,
+                    "random": true,
+                    "anim": {
+                        "enable": true,
+                        "speed": 1,
+                        "opacity_min": 0.1,
+                        "sync": false
+                    }
+                },
+                "size": {
+                    "value": 3,
+                    "random": true,
+                    "anim": {
+                        "enable": true,
+                        "speed": 2,
+                        "size_min": 0.1,
+                        "sync": false
+                    }
+                },
+                "line_linked": {
+                    "enable": true,
+                    "distance": 150,
+                    "color": "#00f3ff",
+                    "opacity": 0.2,
+                    "width": 1
+                },
+                "move": {
+                    "enable": true,
+                    "speed": 1.5,
+                    "direction": "none",
+                    "random": true,
+                    "straight": false,
+                    "out_mode": "out",
+                    "bounce": false,
+                }
+            },
+            "interactivity": {
+                "detect_on": "canvas",
+                "events": {
+                    "onhover": {
+                        "enable": true,
+                        "mode": "grab"
+                    },
+                    "onclick": {
+                        "enable": true,
+                        "mode": "push"
+                    },
+                    "resize": true
+                },
+                "modes": {
+                    "grab": {
+                        "distance": 140,
+                        "line_linked": {
+                            "opacity": 0.8
+                        }
+                    },
+                    "push": {
+                        "particles_nb": 3
+                    }
+                }
+            },
+            "retina_detect": true
+        });
+    </script>
+</body>
+</html>
